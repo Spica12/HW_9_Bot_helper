@@ -1,4 +1,4 @@
-def input_error(func, *args):
+def input_error(func):
     """
     Всі помилки введення користувача повинні оброблятися за допомогою декоратора input_error. 
     Цей декоратор відповідає за повернення користувачеві повідомлень виду 
@@ -7,19 +7,24 @@ def input_error(func, *args):
     Декоратор input_error повинен обробляти винятки, що виникають у функціях-handler 
     (KeyError, ValueError, IndexError) та повертати відповідну відповідь користувачеві.
     """
-    def wrapper(*args):
-        # print(f'Wrapper: {args}')
 
+    def wrapper(args):
+        print(f'Wrapper: func - {func.__name__}, args - {args}')
+
+        if not is_work:
+            return goodbye(args)
         if '.' in args:
             print("You entered '.'. Bot is finishing his work.")
-            goodbye()
+            is_work = False
+            return is_work
+            
+        return func(args)
 
-        func(*args)
 
     return wrapper
 
 
-
+@input_error
 def add(args):
     """
     "add ..."
@@ -28,27 +33,13 @@ def add(args):
     """
     DICT_PHONES[args[0]] = args[1]
 
-def get_commands():
 
-    COMMANDS = {
-        'hello': hello,
-        'add' : add,
-        'change' : change,
-        'phone' : phone,
-        'show all' : show_all,
-        'good bye' : goodbye,
-        'close' : goodbye,
-        'exit' : goodbye,
-        '.' : exit
-    }
-
-    def inner(command):
-        # print(f'inner in get_commands: {command = }')
-
-        return COMMANDS[command]
+@input_error
+def get_commands(command):
+    return COMMANDS[command]
 
 
-    return inner
+@input_error
 def goodbye(args):
     """
     "good bye", 
@@ -61,6 +52,7 @@ def goodbye(args):
     is_work = False
     
 
+@input_error
 def change(args):
     """
     "change ..."
@@ -70,6 +62,7 @@ def change(args):
     DICT_PHONES[args[0]] = args[1]
 
 
+@input_error
 def phone(args):
     """
     "phone ...."
@@ -79,6 +72,8 @@ def phone(args):
 
     print(DICT_PHONES[args[0]])
 
+
+@input_error
 def show_all(args):
     """
     "show all"
@@ -89,6 +84,8 @@ def show_all(args):
         count += 1
         print(f'{count:<2} {name:<15} {phone}')
 
+
+@input_error
 def hello(args):
     """
     "hello"
@@ -99,8 +96,7 @@ def hello(args):
 
 def input_from_user():
 
-    command = ''
-    args = []
+    user_data = list()
 
     user_input = input('>>> ').split()
     # print(f'input_from_user: {user_input = }')
@@ -110,52 +106,55 @@ def input_from_user():
         command = user_input[0]
     elif len_command == 2 and user_input[0] != 'phone':
         command = ' '.join(user_input)
-    elif len_command == 3:
+    else: 
         command = user_input[0]
-        args.extend(user_input[1:])
-    else:
-        print('Command Error: too musch arguments')     
+        user_data.extend(user_input[1:])
+        print('Command Error: too musch arguments. Try again!')     
     
-    return command.lower(), args
+    return command.lower(), user_data
 
 
+def main(): 
 
-
-
-def main():
-    
-    request = get_commands()
-    
     cycle = 0
     while is_work:
         cycle += 1
         print(f'{is_work = }; {cycle = }')
 
+        # Type of requests:
+        #   hello
+        #   add Vitalii 0637609640
+        #   change Vitalii 0984520
+        #   phone Vitalii
+        #   show all
+        #   good bye
+        #   close
+        #   exit    
         
         command, args = input_from_user()
-        request(command)(args)
 
-        # hello
-        # add Vitalii 0637609640
-        # change Vitalii 0984520
-        # phone Vitalii
-        # show all
-        # good bye
-        # close
-        # exit        
-         
-
-        
-
+        request = get_commands(command)
+        request(args)
+    
 
 
 if __name__ == '__main__':
 
-    is_work = True
+    COMMANDS = {
+        'hello': hello,
+        'add' : add,
+        'change' : change,
+        'phone' : phone,
+        'show all' : show_all,
+        'good bye' : goodbye,
+        'close' : goodbye,
+        'exit' : goodbye,
+    }
 
     DICT_PHONES = {
         'Vitalii': '0637609640',
         'Oleg': '0637546853'
     }
 
+    is_work = True
     main()
