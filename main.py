@@ -9,14 +9,25 @@ def input_error(func):
     """
 
     def wrapper(*args, **kwargs):
-        # print(f'Wrapper: func - {func.__name__}, args - {args}')
+        print(f'Wrapper: func - {func.__name__}, args - {args}')
 
-        try:
-            result = func(*args, **kwargs)
-        except TypeError:
-            result = 'TypeError. Something wrong'
-        except KeyError:
-            result = 'You entered a wrong command. Try again!'
+        if func.__name__ == 'add' or \
+            func.__name__ == 'change':
+
+            if len(args) != 2:
+                
+                result = 'Give me name and phone please. Try again'
+
+        elif func.__name__ == 'phone' and len(args) == 0:
+            result = 'Enter user name. Try again'
+
+        else:
+            try:
+                result = func(*args, **kwargs)
+            except TypeError:
+                result = 'TypeError. Something wrong'
+            except KeyError:
+                result = 'You entered a wrong command. Try again!'
         
         return result
 
@@ -111,7 +122,7 @@ def parse_input(user_input):
 
     if len_command == 1:
         command = user_input[0]
-    elif len_command == 2 and user_input[0] != 'phone':
+    elif len_command == 2 and user_input[0] == 'show':
         command = ' '.join(user_input)
     elif len_command == 2:
         command = user_input[0]
