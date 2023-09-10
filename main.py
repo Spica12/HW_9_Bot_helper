@@ -9,29 +9,25 @@ def input_error(func):
     """
 
     def wrapper(*args, **kwargs):
-        print(f'Wrapper: func - {func.__name__}, args - {args}')
-
-        if func.__name__ == 'add' or \
-            func.__name__ == 'change':
-
-            if len(args) != 2:
-                
-                result = 'Give me name and phone please. Try again'
-
-        elif func.__name__ == 'phone' and len(args) == 0:
-            result = 'Enter user name. Try again'
-
-        else:
-            try:
-                result = func(*args, **kwargs)
-            except TypeError:
-                result = 'TypeError. Something wrong'
-            except KeyError:
-                result = 'You entered a wrong command. Try again!'
         
-        return result
+        if DEBUG:
+            print(f'Wrapper: func - {func.__name__}, args - {args}')
+        
+        try:
+            return func(*args, **kwargs)
 
+        except TypeError:
+
+            if func.__name__ == 'phone':
+                return 'Enter user name. Try again'
+            else:
+                return 'Give me name and phone please. Try again'
+            
+        except KeyError:
+            return 'You entered a wrong command. Try again!'
+        
     return wrapper
+
 
 @input_error
 def add(name, phone_number):
@@ -44,6 +40,7 @@ def add(name, phone_number):
 
     return f'Added the new contact: {name = }; {phone_number}'
 
+
 @input_error
 def change(name, phone_number):
     """
@@ -53,7 +50,7 @@ def change(name, phone_number):
     """
     DICT_PHONES[name] = phone_number
 
-    return f'The contact: {name = } changed phone number to {phone_number}'
+    return f'The contact: {name = } was changed phone number to {phone_number}'
 
 
 def goodbye():
@@ -82,7 +79,8 @@ def phone(name):
     Замість ... користувач вводить ім'я контакту, чий номер треба показати.
     """
     if name in DICT_PHONES:
-        result = f'{name:<15} {DICT_PHONES[name]}'
+        result = 'The phone dictionary has next contact:\n'
+        result += f'   {name:<15} {DICT_PHONES[name]}'
     else:
         result = 'No results. The phone dictionary hasn\'t contact with this name'
 
@@ -94,18 +92,15 @@ def show_all():
     "show all"
     За цією командою бот виводить всі збереженні контакти з номерами телефонів у консоль.
     """
-    if len(DICT_PHONES) == 0:
-        result = 'The phone dictionary is empty'
+    if not DICT_PHONES:
 
-        return result
+        return 'The phone dictionary is empty'
     
     result = 'The phone dictionary has next contacts:\n'
 
-    count = 0
-    for name, phone in DICT_PHONES.items():
+    for count, (name, phone) in enumerate(DICT_PHONES.items()):
 
-        count += 1
-        result += f'{count:<2} {name:<15} {phone}\n'
+        result += f'{count+1:<2} {name:<15} {phone}\n'
 
     return result
 
@@ -114,41 +109,43 @@ def parse_input(user_input):
 
     user_input = user_input.split()
 
-    command = None
-    name = None
-    phone_number = None
+    request = list()
 
     len_command = len(user_input)
 
     if len_command == 1:
-        command = user_input[0]
-    elif len_command == 2 and user_input[0] == 'show':
-        command = ' '.join(user_input)
+        request.append(user_input[0])
+    elif len_command == 2 and user_input[0].lower() == 'show':
+        request.append(' '.join(user_input))
     elif len_command == 2:
-        command = user_input[0]
-        name = name = user_input[1]
+        request.append(user_input[0])
+        request.append(user_input[1])
     else:
-        command = user_input[0]
-        name = user_input[1]
-        phone_number = user_input[2]
+        request.append(user_input[0])
+        request.append(user_input[1])
+        request.append(user_input[2])
 
-    return command.lower(), name, phone_number
+    request[0] = request[0].lower()
+
+    return request
 
 
 @input_error
 def get_handler(command):
     return COMMANDS[command]
-    
+
+
+
+
 
 def main():
 
-    is_work = True 
-
     cycle = 0
-    while is_work:
+    while True:
 
-        cycle += 1
-        print(f'\n{is_work = }; {cycle = }')
+        if DEBUG:
+            cycle += 1
+            print(f'\n{cycle = }')
 
         # Type of requests:
         # +  hello
@@ -162,18 +159,16 @@ def main():
 
         user_input = input('>>> ')
 
-        command, name, phone_number = parse_input(user_input)
+        request = parse_input(user_input)
 
-        handler = get_handler(command)
+        handler = get_handler(request.pop(0))
+        
+        if not isinstance(handler, str):
 
-        if type(handler) != str:
-
-            if name is None and phone_number is None:
-                result = handler()
-            elif name is not None and phone_number is None:
-                result = handler(name)
+            if request:
+                result = handler(*request)
             else:
-                result = handler(name, phone_number)
+                result = handler()
 
         else:
             result = handler
@@ -181,14 +176,10 @@ def main():
         print(result)
 
         if result == 'Good Bye!':
-            is_work = False
-
-
-        
-        
+            break
 
     
-
+DEBUG = False
 
 if __name__ == '__main__':
 
@@ -204,8 +195,8 @@ if __name__ == '__main__':
     }
 
     DICT_PHONES = {
-        # 'Vitalii': '0637609640',
-        # 'Oleg': '0637546853'
+        'Vitalii': '0637609640',
+        'Oleg': '0637546853'
     }
 
     main()
