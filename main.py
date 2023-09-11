@@ -17,11 +17,12 @@ def input_error(func):
             return func(*args, **kwargs)
 
         except TypeError:
+            return 'Give me name and phone please. Try again'
 
-            if func.__name__ == 'phone':
-                return 'Enter user name. Try again'
-            else:
-                return 'Give me name and phone please. Try again'
+            # if func.__name__ == 'phone':
+            #     return 'Enter user name. Try again'
+            # else:
+            #     return 'Give me name and phone please. Try again'
             
         except KeyError:
             return 'You entered a wrong command. Try again!'
@@ -133,9 +134,6 @@ def parse_input(user_input):
 @input_error
 def get_handler(command):
     return COMMANDS[command]
-
-
-
 
 
 def main():
